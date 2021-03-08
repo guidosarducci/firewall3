@@ -414,22 +414,6 @@ set_comment(struct fw3_ipt_rule *r, const char *name, int num)
 		fw3_ipt_rule_comment(r, "@rule[%u]", num);
 }
 
-static inline bool
-fw3_device_seen(struct fw3_device *dev, struct list_head *devices)
-{
-	struct fw3_device *tmp;
-	bool dev_seen = false;
-
-	fw3_foreach(tmp, devices)
-	{
-		if (tmp == dev)
-			break;
-		if (tmp && dev && !strcmp(dev->name, tmp->name))
-			dev_seen = true;
-	}
-	return dev_seen;
-}
-
 static void
 print_rule(struct fw3_ipt_handle *handle, struct fw3_state *state,
            struct fw3_rule *rule, int num, struct fw3_protocol *proto,
@@ -502,31 +486,23 @@ print_rule(struct fw3_ipt_handle *handle, struct fw3_state *state,
 	}
 
 	fw3_foreach(idev, idevices)
+	fw3_foreach(odev, odevices)
 	{
-		if (fw3_device_seen(idev, idevices))
-			continue;
-
-		fw3_foreach(odev, odevices)
-		{
-			if (fw3_device_seen(odev, odevices))
-				continue;
-
-			r = fw3_ipt_rule_create(handle, proto, idev, odev, sip, dip);
-			fw3_ipt_rule_sport_dport(r, sport, dport);
-			fw3_ipt_rule_device(r, rule->device, rule->direction_out);
-			fw3_ipt_rule_icmptype(r, icmptype);
-			fw3_ipt_rule_mac(r, mac);
-			fw3_ipt_rule_ipset(r, &rule->ipset);
-			fw3_ipt_rule_helper(r, &rule->helper);
-			fw3_ipt_rule_limit(r, &rule->limit);
-			fw3_ipt_rule_time(r, &rule->time);
-			fw3_ipt_rule_mark(r, &rule->mark);
-			fw3_ipt_rule_dscp(r, &rule->dscp);
-			set_target(r, rule);
-			fw3_ipt_rule_extra(r, rule->extra);
-			set_comment(r, rule->name, num);
-			append_chain(r, rule);
-		}
+		r = fw3_ipt_rule_create(handle, proto, idev, odev, sip, dip);
+		fw3_ipt_rule_sport_dport(r, sport, dport);
+		fw3_ipt_rule_device(r, rule->device, rule->direction_out);
+		fw3_ipt_rule_icmptype(r, icmptype);
+		fw3_ipt_rule_mac(r, mac);
+		fw3_ipt_rule_ipset(r, &rule->ipset);
+		fw3_ipt_rule_helper(r, &rule->helper);
+		fw3_ipt_rule_limit(r, &rule->limit);
+		fw3_ipt_rule_time(r, &rule->time);
+		fw3_ipt_rule_mark(r, &rule->mark);
+		fw3_ipt_rule_dscp(r, &rule->dscp);
+		set_target(r, rule);
+		fw3_ipt_rule_extra(r, rule->extra);
+		set_comment(r, rule->name, num);
+		append_chain(r, rule);
 	}
 }
 
