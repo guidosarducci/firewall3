@@ -137,7 +137,8 @@ check_masq_addrs(struct list_head *head)
 static void
 resolve_networks(struct uci_element *e, struct fw3_zone *zone)
 {
-	struct fw3_device *net, *tmp;
+	struct fw3_device *net, *dev, *tmp;
+	bool dev_seen;
 
 	list_for_each_entry(net, &zone->networks, list)
 	{
@@ -146,6 +147,18 @@ resolve_networks(struct uci_element *e, struct fw3_zone *zone)
 		if (!tmp)
 		{
 			warn_elem(e, "cannot resolve device of network '%s'", net->name);
+			continue;
+		}
+
+		dev_seen = false;
+
+		list_for_each_entry(dev, &zone->devices, list)
+			if (!strcmp(dev->name, tmp->name))
+				dev_seen = true;
+
+		if (dev_seen)
+		{
+			free(tmp);
 			continue;
 		}
 
